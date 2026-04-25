@@ -1,0 +1,95 @@
+-----------------
+Project Structure
+-----------------
+
+user pickes algorithm + types array
+		|
+		V
+user clicks 'visualize' and waits briefly
+		|
+		V
+React calls haskell algo-visualizer backend
+"GET /sort/bubble?input=3,1,4,2"
+		|
+		V
+Backend returns JSON array of steps
+		|
+		V
+React stores steps in state
+		|
+		V
+User plays, pauses, iterates over steps
+		|
+		V
+Visualizer animates current step from previous state
+
+App
+|--AlgorithmPicker	-> bubblesort, mergesort, etc. buttons
+|--ArrayInput		-> user types in the array
+|--Visualizer		-> contains animated region
+|--StepControls		-> control play, pause, previous
+
+App - react parent
+- root component, contains the state -> source of information
+- when state is mutated, queue UI to render new frames
+> algorithm "bubble", "merge"
+> steps: [Step] from backend
+> currentStepIndex: Int
+> isPlaying: Bool state that determines if we are auto-advancing steps or in pause mode
+
+AlgorithmPicker
+- just a button to select the algorithm
+[ bubblesort] [ mergesort ]
+- clicking a button tells App to update algorithm state
+Receives properties:
+> algorithm
+> onSelectAlg: callback function, tells app which algorithm was picked
+
+ArrayInput
+- text field where user types list of comma seperated inputs
+- on click, visualize it:
+1. parse input into int array
+2. call haskell backend with 'fetch'
+3. take JSON response, pass steps to app
+--	const response = await fetch(
+--		'http://localhost:8080/sort/${algorithm}?input=${arrayInput}'
+--	)
+const steps = await response.json()
+Receives properties:
+> algorithm: so it knows which to call backend with
+> onStepsLoaded: callback to pass steps array to app
+
+Visualizer
+- takes current step value and renders array as animated bars
+Receives
+> currentState : full array, used to set bar heights and create boxes
+> comparing : two indices being compared, used to highlight the boxes related to current step
+- when step changes, we call basic animation library Framer Motion
+- animate bars smoothly between positions, integers fade in/out of boxes
+Properties received
+> step : current Step from the array
+
+StepControls
+- displays like a playback bar -> see spotify, youtube, etc.
+[|<] [<] [||] [>] [>|] Step 1/4
+- prev, next, pause, play
+- timer
+- slider to allow user to scrub through timeline freely
+Receives
+> currentStepIndex
+> totalSteps
+> isPlaying
+Callbacks
+> onPlay
+> onPause
+> onNext
+> onPrev
+> onScrub
+
+-----------
+Interaction
+
+1. data flows down from app as props
+2. events flow up as callbacks
+3. backend queried/fetched exclusively by ArrayInput
+

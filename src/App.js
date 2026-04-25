@@ -1,25 +1,16 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react"
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [algorithm, setAlgorithm] = useState("bubble")
+    const [steps, setSteps] = useState([])
+    const [currentStepIndex, setCurrentStepIndex] = useState(0)
+    const [isPlaying, setIsPlaying] = useState(false)
+
+    return (
+        <div className="app">
+            <h1>Algorithm Visualizer</h1>
+        </div>
+    )
 }
 
-export default App;
+export default App
