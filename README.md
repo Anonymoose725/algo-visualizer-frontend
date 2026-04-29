@@ -1,70 +1,73 @@
-# Getting Started with Create React App
+# algo-visualizer-frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React frontend that animates classic algorithm execution step by step.
 
-## Available Scripts
+Live at [algo-visualizer-frontend-six.vercel.app](https://algo-visualizer-frontend-six.vercel.app)  
+Backend: [algo-visualizer](https://github.com/Anonymoose725/algo-visualizer)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## What it does
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The frontend sends an array to the Haskell backend, receives a full execution trace (every comparison the algorithm made and intermediate states), and animates through it, intuitively showing which elements are being compared at each step via highlighted bars and arrows, labeled boxes, and indicator colours.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Layer | Technology | Role |
+|---|---|---|
+| Framework | [React](https://react.dev) | Component/property based UI: each piece of the interface is an isolated function that re-renders when its data changes, hangs to wait for backend data |
+| Animations | [Framer Motion](https://www.framer.com/motion/) | Smooth bar height and color transitions between steps |
+| Hosting | [Vercel](https://vercel.com) | Deploys automatically from git on every push |
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Running locally
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**Prerequisites:** Node.js via [nvm](https://github.com/nvm-sh/nvm)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/Anonymoose725/algo-visualizer-frontend
+cd algo-visualizer-frontend
+npm install
+npm start
+```
 
-### `npm run eject`
+App runs at `http://localhost:3000`. Note the backend is on port 8080 if also running locally.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**Connecting to the backend!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The frontend reads the API URL from an environment variable. Create a `.env` file in the project root:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+REACT_APP_API_URL=http://localhost:8080
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Then run the backend locally (see instructions in its README). Without a running backend, the visualizer UI loads but Visualize fetch requests will fail and throw an error.
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Component structure
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+App                          — owns all states to be updated (algorithm, steps, current index, playing)
+├── AlgorithmPicker          — user selects active algorithm, states mutated
+├── ArrayInput               — text input + Visualize button, makes the API request to backend
+├── Visualizer               — renders graphics for current step
+└── StepControls             — play/pause/skip/adjust controls with a range slider to go between steps
+```
 
-### Code Splitting
+The flow of data is strict: raw information flows down as properties, events go back up as callbacks, and the backend is only ever contacted once by `ArrayInput`. Any other component is purely reliant on the step array stored in state. Functions mutate the state as required.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## How the visualization works, sequentially
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. User enters a comma seperated string and clicks *Visualize*
+2. `ArrayInput` sends `GET /sort/${algorithm}?input={array}` to the Haskell backend
+3. Backend returns a JSON array of steps generated
+4. Steps are stored in `App` state exclusively
+5. `Visualizer` renders the current step: bar heights reflect values, red highlighting and arrows mark the two elements being compared
+6. `StepControls` moves `currentStepIndex` manually or automatically via a 500ms interval if user chooses to press play
+7. On the final step everything turns green to signal completion
