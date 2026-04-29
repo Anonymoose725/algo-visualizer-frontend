@@ -1,3 +1,5 @@
+import { motion } from "framer-motion"
+
 function Visualizer({ step, isComplete }) {
     if (!step) { // gaurd against empty input
         return (
@@ -29,12 +31,24 @@ function Visualizer({ step, isComplete }) {
                         key={index} // react requires a unique key prop on elements inside a map. here we use the array index
                         className="bar-col"
                     >
-                        <div
+                        {/* <div
                             className="bar"
                             style={{ // inline styles in react jsx use double curly brace
                                 height: `${(value / maxValue) * 200}px`,
                                 backgroundColor: getBarColour(index)
                             }}
+                        /> */}
+                        <motion.div
+                            className="bar"
+                            initial={{
+                                height: `${(value / maxValue) * 200}px`,
+                                backgroundColor: getBarColour(index)
+                            }}
+                            animate={{
+                                height: `${(value / maxValue) * 200}px`,
+                                backgroundColor: getBarColour(index)
+                            }}
+                            transition={{ duration: 0.3 }}
                         />
                     </div>
                 ))}
