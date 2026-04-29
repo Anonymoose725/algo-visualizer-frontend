@@ -8,8 +8,6 @@
 // step counter
 
 // we make use of the useEffect hook to create a timer side effect while isPlaying
-
-import { steps } from "framer-motion"
 import { useEffect } from "react"
 
 function StepControls({ currentStepIndex, totalSteps, isPlaying, onPlay, onPause, onNext, onPrev, onFirst, onLast, onScrub }) {
