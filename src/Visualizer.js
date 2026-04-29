@@ -13,7 +13,7 @@ function Visualizer({ step, isComplete }) {
     const maxValue = Math.max(...currentState) // shorthand like list comprehensions in haskell : 'spread operator'
 
     // find indices of two elements being compared at step
-    const comparedIndices = getComparedIndices(currentState, comparing)
+    const comparedIndices = [step.comparingIndices[0], step.comparingIndices[1]]
 
     function getBarColour(index) {
         if (isComplete) return "green"
@@ -80,31 +80,6 @@ function Visualizer({ step, isComplete }) {
 
         </div>
     )
-}
-
-// logic
-function getComparedIndices(state, comparing) {
-    const [a, b] = comparing
-    const indices = []
-
-    // arrow 1
-    for (let i = 0; i < state.length; i++) {
-        if (state[i] === a && !indices.includes(i)) {
-            // break and avoid duplicates, match values only once
-            indices.push(i)
-            break
-        }
-    }
-
-    // arrow 2
-    for (let i = 0; i < state.length; i++) {
-        if (state[i] === b && !indices.includes(i)) {
-            indices.push(i)
-            break
-        }
-    }
-
-    return indices
 }
 
 export default Visualizer
