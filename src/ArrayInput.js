@@ -5,6 +5,8 @@ function ArrayInput({ algorithm, onStepsLoaded }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
+    const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080" // env for hosting
+
     async function handleVisualize() { // async to pause and resume without hanging the webpage
         setLoading(true)
         setError(null)
@@ -13,7 +15,7 @@ function ArrayInput({ algorithm, onStepsLoaded }) {
             const response = await fetch(
                 // make an http request to haskell backend, just like curl but from js
                 // await pauses execution until request is received
-                `http://localhost:8080/sort/${algorithm}?input=${inputValue}`
+                `${BASE_URL}/sort/${algorithm}?input=${inputValue}`
             )
             if (!response.ok) { // response.ok true if http returns 200-299. if haskell returns 400 (missing input), throw this manually:
                 throw new Error("Invalid Input - make sure numbers are entered seperated by commas ','")
