@@ -26,7 +26,7 @@ function StepControls({ currentStepIndex, totalSteps, isPlaying, onPlay, onPause
         }, 500)
 
         return () => clearInterval(timer) // cleanup
-    }, [isPlaying, currentStepIndex]) // dependency array
+    }, [isPlaying, currentStepIndex, totalSteps, onNext, onPause]) // dependency array
 
     if (totalSteps === 0) {
         return null // hide component unless there are steps to visualize!
