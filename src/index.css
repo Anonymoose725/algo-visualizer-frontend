@@ -4,17 +4,29 @@
     padding: 0;
 }
 
+:root {
+    --primary-blue: rgb(31, 75, 104);
+    --primary-offwhite: rgb(246, 238, 220)
+        /* will use later */
+}
+
 body {
-    background: #1a1a2e;
+    /* background: #1a1a2e; */
+    background: rgb(246, 238, 220);
     color: #eee;
     font-family: monospace;
     padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
 }
 
 h1 {
     margin-bottom: 24px;
     font-size: 1.8rem;
-    color: #fff;
+    /* color: #000000; */
+    color: rgb(31, 75, 104)
 }
 
 /* Algorithm Picker */
@@ -29,7 +41,7 @@ h1 {
     border: 2px solid #555;
     border-radius: 6px;
     background: transparent;
-    color: #eee;
+    color: #000000;
     cursor: pointer;
     font-family: monospace;
     font-size: 0.95rem;
@@ -54,7 +66,8 @@ h1 {
     padding: 8px 12px;
     border: 2px solid #555;
     border-radius: 6px;
-    background: #16213e;
+    /* background: #16213e; */
+    background: rgb(31, 75, 104);
     color: #eee;
     font-family: monospace;
     font-size: 0.95rem;
@@ -151,4 +164,54 @@ h1 {
     font-size: 1.2rem;
     margin-top: 4px;
     color: #ff6b6b;
+}
+
+.step-controls {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 500px;
+}
+
+.step-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.step-buttons button {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #555;
+    border-radius: 6px;
+    background: transparent;
+    /* color: #eee; */
+    color: rgb(31, 75, 104);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-button button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.step-button button:hover:not(:disabled) {
+    border-color: #7eb8f7;
+    color: #7eb8f7;
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: #7eb8f7;
+    cursor: pointer;
+}
+
+.step-counter {
+    font-size: 0.85rem;
+    color: #888;
 }
