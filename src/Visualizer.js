@@ -9,7 +9,7 @@ function Visualizer({ step, isComplete }) {
         )
     }
 
-    const { currentState, comparing } = step
+    const { currentState, comparingIndices } = step
     const maxValue = Math.max(...currentState) // shorthand like list comprehensions in haskell : 'spread operator'
 
     // find indices of two elements being compared at step
