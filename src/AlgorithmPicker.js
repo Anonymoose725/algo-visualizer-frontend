@@ -15,6 +15,12 @@ function AlgorithmPicker({ algorithm, onSelect }) {
             >
                 Merge Sort
             </button>
+            <button
+                className={algorithm === "insertion" ? "active" : ""}
+                onClick={() => onSelect("insertion")}
+            >
+                Insertion Sort
+            </button>
         </div>
     )
 }
