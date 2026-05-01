@@ -27,6 +27,23 @@ function App() {
 
     const isComplete = steps.length > 0 && currentStepIndex === steps.length - 1 // at end of steps
 
+    // for insertion sort - not so efficient...
+    function getSortedBoundary(steps, index) {
+        if (!steps.length) return -1;
+        let maxRightIndex = 0;
+        for (let i = 0; i <= index; i++) {
+            const rightIndex = steps[i].comparingIndices[1]
+            if (rightIndex > maxRightIndex) {
+                maxRightIndex = rightIndex
+            }
+        }
+        return maxRightIndex - 1
+    }
+
+    const sortedBoundary = algorithm === "insertion" // only do calculation if insertionsort selected
+        ? getSortedBoundary(steps, currentStepIndex)
+        : -1
+
     return (
         <div className="app">
             <h1>Algorithm Visualizer</h1>
@@ -41,6 +58,8 @@ function App() {
             <Visualizer
                 step={steps[currentStepIndex]}
                 isComplete={isComplete}
+                algorithm={algorithm}
+                sortedBoundary={sortedBoundary}
             />
             <StepControls
                 currentStepIndex={currentStepIndex}

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 
-function Visualizer({ step, isComplete }) {
+function Visualizer({ step, isComplete, algorithm, sortedBoundary }) {
     if (!step) { // gaurd against empty input
         return (
             <div className="visualizer-empty">
@@ -8,6 +8,7 @@ function Visualizer({ step, isComplete }) {
             </div>
         )
     }
+
 
     const { currentState, comparingIndices } = step
     const maxValue = Math.max(...currentState) // shorthand like list comprehensions in haskell : 'spread operator'
@@ -18,6 +19,7 @@ function Visualizer({ step, isComplete }) {
     function getBarColour(index) {
         if (isComplete) return "green"
         if (comparedIndices.includes(index)) return "red"
+        if (algorithm === "insertion" && index <= sortedBoundary) return "green"
         return "steelblue"
     }
 
@@ -78,6 +80,64 @@ function Visualizer({ step, isComplete }) {
                 ))}
             </div>
 
+            {/* partition brackets */}
+            <div className="brackets">
+
+                {algorithm === "merge" && step.partitionInfo && (
+                    <>
+                        <BracketBar
+                            lo={step.partitionInfo.leftRange[0]}
+                            hi={step.partitionInfo.rightRange[1]}
+                            totalElements={currentState.length}
+                            color="red"
+                            label="left"
+                        />
+                        <BracketBar
+                            lo={step.partitionInfo.leftRange[0]}
+                            hi={step.partitionInfo.rightRange[1]}
+                            totalElements={currentState.length}
+                            color="steelblue"
+                            label="right"
+                        />
+                    </>
+                )}
+
+                {algorithm === "insertion" && sortedBoundary >= 0 && (
+                    <>
+                        <BracketBar
+                            lo={0}
+                            hi={sortedBoundary}
+                            totalElements={currentState.length}
+                            color="green"
+                            label="sorted"
+                        />
+                        <BracketBar
+                            lo={sortedBoundary + 1}
+                            hi={currentState.length - 1}
+                            totalElements={currentState.length}
+                            color="#888"
+                            label="unsorted"
+                        />
+                    </>
+                )}
+            </div>
+        </div>
+    )
+}
+
+function BracketBar({ lo, hi, totalElements, color, label }) {
+    const BOX_WIDTH = 40
+    const BOX_GAP = 4
+    const left = lo * (BOX_WIDTH + BOX_GAP)
+    const width = (hi - lo + 1) * (BOX_WIDTH + BOX_GAP) - BOX_GAP
+
+    return (
+        <div className="bracket-bar" style={{ marginLeft: `${left}px`, width: `$(width)px` }}>
+            <div className="bracket-line" style={{ borderColor: color }}>
+                <div className="left-bracket-tick" style={{ borderColor: color }} />
+                <div className="right-bracket-tick" style={{ borderColor: color }} />
+            </div>
+            <span className="bracket-label" style={{ color }}>{label}</span>
         </div>
     )
 }
