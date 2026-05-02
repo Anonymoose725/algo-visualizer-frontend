@@ -87,13 +87,13 @@ function Visualizer({ step, isComplete, algorithm, sortedBoundary }) {
                     <>
                         <BracketBar
                             lo={step.partitionInfo.leftRange[0]}
-                            hi={step.partitionInfo.rightRange[1]}
+                            hi={step.partitionInfo.leftRange[1]}
                             totalElements={currentState.length}
                             color="red"
                             label="left"
                         />
                         <BracketBar
-                            lo={step.partitionInfo.leftRange[0]}
+                            lo={step.partitionInfo.rightRange[0]}
                             hi={step.partitionInfo.rightRange[1]}
                             totalElements={currentState.length}
                             color="steelblue"
@@ -132,7 +132,7 @@ function BracketBar({ lo, hi, totalElements, color, label }) {
     const width = (hi - lo + 1) * (BOX_WIDTH + BOX_GAP) - BOX_GAP
 
     return (
-        <div className="bracket-bar" style={{ marginLeft: `${left}px`, width: `$(width)px` }}>
+        <div className="bracket-bar" style={{ marginLeft: `${left}px`, width: `${width}px` }}>
             <div className="bracket-line" style={{ borderColor: color }}>
                 <div className="left-bracket-tick" style={{ borderColor: color }} />
                 <div className="right-bracket-tick" style={{ borderColor: color }} />
