@@ -93,3 +93,50 @@ Interaction
 2. events flow up as callbacks
 3. backend queried/fetched exclusively by ArrayInput
 
+
+
+
+
+----------
+Graphs, Trees (Nodes + Edges)
+
+{
+    nodes: [{ id, label, x, y, state }]
+    edges: [{ from, to, weight, state }]
+}
+
+Trees are special cases of graphs
+Structure can cover:
+    - BSTs (RB Trees, Heaps, etc.)
+    - Weighted Graphs
+    - DAGs
+    - SCCs
+    - Bipartite Graphs
+    So much opportunity?
+
+Layout          | BST               | Dijkstra's             | BFS/DFS
+===============================================================================
+Edge Direction  | Parent->Child     | Bidirectional weighted | Bidirectional
+Node Label      | Value             | Value                  | Value
+Edge Label      | None              | Weight                 | None
+Highlighting    | Search Path       | Shortest Path          | Visited frontier
+
+Fundamentally: only the layout drastically changes
+
+The PLAN!
+1. build a single, general GraphVisualizer
+    - accepts nodes
+    - accepts edges
+    both have positions, states
+2. build layout functions seperately
+
+layout functions:
+function treeLayout(treeJSON)  -> { nodes, edges } 
+function userLayout(adjacency) -> { nodes, edges } // for graph builder
+
+3. each layout function converts algorithm-specific data into generic { nodes, edges }
+ 
+=> graph visualizer only needs to be built once! adding dijkstra's later means we write a new layout function, not a visualizer
+=> graph builder just lets users define positions manually by dragging around
+
+see backend comments
