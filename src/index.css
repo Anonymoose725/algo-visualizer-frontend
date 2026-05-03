@@ -6,8 +6,13 @@
 
 :root {
     --primary-blue: rgb(31, 75, 104);
-    --primary-offwhite: rgb(246, 238, 220)
-        /* will use later */
+    --primary-offwhite: rgb(246, 238, 220);
+    /* --node-default-fill: #e8e0cc;
+    --node-default-stroke: #a09070;
+    --node-visited-fill: #E6F1FB;
+    --node-visited-stroke: #185FA5;
+    --node-found-fill: #EAF3DE;
+    --node-found-stroke: #3B6D11; */
 }
 
 body {

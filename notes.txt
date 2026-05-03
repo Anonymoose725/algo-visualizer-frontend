@@ -140,3 +140,116 @@ function userLayout(adjacency) -> { nodes, edges } // for graph builder
 => graph builder just lets users define positions manually by dragging around
 
 see backend comments
+
+
+--------
+GraphVisualizer
+
+Gets GraphResponse from JSON: renders each field as follows
+{
+    nodes - circles with values embedded, colour determined by highlightedNodes
+    edges - lines between nodes: have arrows, one or two (one each end)
+    steps - animate through highlightedNodes, changes per step just like Step
+}
+
+Layout in cartesian plane
+
+Position in the canvas is determined by the frontend, not the backend!
+Frontend must calculated (x,y) for each node. For a BST, we:
+    1. find root -> node that never appears as a toNode (indegree = 0)
+    2. perform BFS from root, assigning a depth level
+    3. at each depth level, space nodes evenly, horizontally
+
+
+More Generic
+
+a plan: calculate position -> render circles and labels -> render lines and arrows -> render color changes at each step
+GraphVisualizer
+|-- produces layout : (nodes, edges) -> { id: {x, y} }
+|-- renders nodes at positions
+|-- render edges between positions
+|-- highlight nodes/edges per step
+
+1. find root
+
+const toNodes = new Set(edges.map(e => e.toNode))
+const root = nodes.find(n => !toNodes.has(n.nodeID))
+
+2. BFS -> evenly expanding frontier finds all at depth k before moving to depth k+1
+
+root depth = 0
+root.children depth = 1
+root.children.children depth = 2 ...
+
+3. spread nodes horizontally and evenly across plane
+
+recall: bfs uses a stack.
+
+javascriptBFS(tree) {
+    let queue = []
+    root.depth = 0
+    queue.push(root)
+
+    while (!queue.isEmpty) {
+        curNode = queue.pop()
+        for (child : curNode.toNodes) {
+            child.depth = curNode.depth + 1
+            queue.push(child)
+        }
+    }
+}
+
+
+we need an adjacency map first so our edges can go from a flat list to a map of nodeID -> [childIDs]
+
+const children = {}
+nodes.forEach(n => children[n.nodeID] = [])
+edges.forEach(e => children[e.fromNode].push(e.toNode))
+
+fully build:
+
+function computeLayout(nodes, edges) {
+    if (!nodes.length) return {}
+
+    build adjacency map
+
+    find root
+
+    BFS to assign depths:
+    const depths = {}
+    const queue = [root.nodeID]
+    depths[root.nodeID] = 0
+
+    while (queue.length) {
+        const cur = queue.shift()
+        for (const child of children[cur]) {
+            depths[child] = depths[cur] + 1
+            queue.push(child)
+        }
+    }
+
+    group nodes by depth level for rendering horizontally:
+    const levels = {}
+    nodes.forEach(n => {
+        const d = depths[n.nodeID] ?? 0
+        if (!levels[d]) levels[d] = []
+        levels[d].push(n.nodeID)
+    })
+
+    assign x positions, spreading evenly across plane
+    const WIDTH = 600 //(pixels)
+    const LEVEL_HEIGHT = 90
+    const positions = {}
+
+    Object.entries(levels).forEach(([d, ids])) => {
+        const count = ids.length // number in each level
+        ids.forEach((id, i) => {
+            positions[id] = {
+                x: (WIDTH / (count+1) * (i+1) + 40), // divide width evenly, spacing symmetrically.
+                y: parseInt(d) * LEVEL_HEIGHT + 60
+            }
+        })
+    }
+
+    return positions
+}
