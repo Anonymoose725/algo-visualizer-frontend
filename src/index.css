@@ -16,16 +16,21 @@
     --node-found-stroke: #3B6D11; */
 }
 
+.app {
+    padding: 24px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
 body {
     /* background: #1a1a2e; */
     background: rgb(246, 238, 220);
     color: #eee;
     font-family: monospace;
     padding: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
 }
 
 h1 {
@@ -115,6 +120,11 @@ h1 {
     align-items: flex-start;
     gap: 0;
     margin-top: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    width: 100%;
+    /* take full parent width, for lots and lots of bars */
+    box-sizing: border-box;
 }
 
 .visualizer-empty {
@@ -130,6 +140,7 @@ h1 {
     gap: 4px;
     height: 220px;
     padding-bottom: 0;
+    min-width: max-content;
 }
 
 .bar-column {
@@ -150,6 +161,7 @@ h1 {
 .boxes {
     display: flex;
     gap: 4px;
+    min-width: max-content;
 }
 
 .box-column {
@@ -231,6 +243,7 @@ input[type="range"] {
     position: relative;
     height: 32px;
     margin-top: 4px;
+    min-width: max-content;
 }
 
 .bracket-bar {
