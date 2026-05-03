@@ -4,51 +4,87 @@ const WIDTH = 680
 const LEVEL_HEIGHT = 90
 const NODE_RADIUS = 24
 
+// function computeLayout(nodes, edges) {
+//     if (!nodes.length) return {}
+
+//     // adjacency map
+//     const children = {}
+//     nodes.forEach(n => children[n.nodeID] = [])
+//     edges.forEach(e => children[e.fromNode].push(e.toNode))
+
+//     // find root
+//     const toNodes = new Set(edges.map(e => e.toNode))
+//     const root = nodes.find(n => !toNodes.has(n.nodeID)) // indegree = 0
+
+//     // BFS
+//     const depths = {}
+//     const queue = [root.nodeID]
+//     depths[root.nodeID] = 0
+
+//     while (queue.length) { // while !q.isEmpty
+//         const cur = queue.shift() // poll
+//         for (const child of children[cur]) {
+//             depths[child] = depths[cur] + 1
+//             queue.push(child)
+//         }
+//     }
+
+//     // group by level
+//     const levels = {}
+//     nodes.forEach(n => {
+//         const depth = depths[n.nodeID] ?? 0
+//         if (!levels[depth]) levels[depth] = []
+//         levels[depth].push(n.nodeID)
+//     })
+
+//     // assign x positions, spreading evenly
+//     const positions = {}
+//     Object.entries(levels).forEach(([depth, ids]) => {
+//         const count = ids.length
+//         ids.forEach((id, i) => {
+//             positions[id] = {
+//                 x: (WIDTH / (count + 1)) * (i + 1),
+//                 y: parseInt(depth) * LEVEL_HEIGHT + 60
+//             }
+//         })
+//     })
+
+//     return positions
+// }
+
+// revision for correctness: nodes must be placed with awareness of parent, so that children are placed on left/right correctly
 function computeLayout(nodes, edges) {
     if (!nodes.length) return {}
 
-    // adjacency map
     const children = {}
     nodes.forEach(n => children[n.nodeID] = [])
     edges.forEach(e => children[e.fromNode].push(e.toNode))
 
-    // find root
     const toNodes = new Set(edges.map(e => e.toNode))
-    const root = nodes.find(n => !toNodes.has(n.nodeID)) // indegree = 0
+    const root = nodes.find(n => !toNodes.has(n.nodeID))
+    if (!root) return {}
 
-    // BFS
-    const depths = {}
-    const queue = [root.nodeID]
-    depths[root.nodeID] = 0
+    const positions = {}
 
-    while (queue.length) { // while !q.isEmpty
-        const cur = queue.shift() // poll
-        for (const child of children[cur]) {
-            depths[child] = depths[cur] + 1
-            queue.push(child)
+    function layout(nodeId, lo, hi, depth) {
+        const mid = (lo + hi) / 2
+        positions[nodeId] = {
+            x: mid,
+            y: depth * LEVEL_HEIGHT + 60
         }
+        const kids = children[nodeId] || []
+
+        // figure out which child is left and which is right
+        // left child has a smaller value than current node (always!!!)
+        const nodeValue = nodes.find(n => n.nodeID === nodeId)?.nodeValue
+        const leftChild = kids.find(id => nodes.find(n => n.nodeID === id)?.nodeValue < nodeValue)
+        const rightChild = kids.find(id => nodes.find(n => n.nodeID === id)?.nodeValue >= nodeValue)
+
+        if (leftChild !== undefined) layout(leftChild, lo, mid, depth + 1)
+        if (rightChild !== undefined) layout(rightChild, mid, hi, depth + 1)
     }
 
-    // group by level
-    const levels = {}
-    nodes.forEach(n => {
-        const depth = depths[n.nodeID] ?? 0
-        if (!levels[depth]) levels[depth] = []
-        levels[depth].push(n.nodeID)
-    })
-
-    // assign x positions, spreading evenly
-    const positions = {}
-    Object.entries(levels).forEach(([depth, ids]) => {
-        const count = ids.length
-        ids.forEach((id, i) => {
-            positions[id] = {
-                x: (WIDTH / (count + 1)) * (i + 1),
-                y: parseInt(depth) * LEVEL_HEIGHT + 60
-            }
-        })
-    })
-
+    layout(root.nodeID, 40, WIDTH - 40, 0)
     return positions
 }
 
