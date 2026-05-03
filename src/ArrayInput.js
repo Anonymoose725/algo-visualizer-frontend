@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { demoData } from "./demo/demoData"
 
 function ArrayInput({ algorithm, onStepsLoaded }) {
     const [inputValue, setInputValue] = useState("")
@@ -24,7 +25,14 @@ function ArrayInput({ algorithm, onStepsLoaded }) {
             const steps = await response.json() // wait to receieve steps from backend
             onStepsLoaded(steps)
         } catch (err) {
-            setError(err.message) // catch and throw error
+            const demo = demoData[algorithm]
+            if (demo) {
+                onStepsLoaded(demo.steps)
+                setError("Backend unavailable, showing demo")
+            }
+            else {
+                setError(err.message) // catch and throw error
+            }
         } finally { // runs regardless, turn the loading state off
             setLoading(false)
         }
