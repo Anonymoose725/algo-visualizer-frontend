@@ -141,6 +141,7 @@ function App() {
                         graphData={graphData}
                         currentStepIndex={currentStepIndex}
                         isComplete={isComplete}
+                        bstMode={bstMode}
                     />
                 </>
             )}

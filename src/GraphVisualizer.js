@@ -124,7 +124,7 @@ function getNodeColor(id, highlightedNodes, isComplete) {
     return { fill: "#E6F1FB", stroke: "#185FA5", text: "#185FA5" }
 }
 
-function GraphVisualizer({ graphData, currentStepIndex, isComplete }) {
+function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
     if (!graphData) {
         return (
             <div className="visualizer-empty">
@@ -134,7 +134,29 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete }) {
     }
 
     const { nodes, edges, steps } = graphData // deconstruct
-    const positions = computeLayout(nodes, edges)
+
+    function getVisibleNodes(nodes, steps, currentStepIndex) {
+        if (!steps || !steps.length) return new Set(nodes.map(n => n.nodeID))
+
+        const visible = new Set()
+        for (let i = 0; i <= currentStepIndex; i++) {
+            const h = steps[i].highlightedNodes
+            if (h.length > 0) {
+                // take the last node in h, since the last node in each step is the one which is newly inserted
+                visible.add(h[h.length - 1])
+            }
+        }
+        return visible
+    }
+
+    const visibleNodeIds = bstMode === "insert"
+        ? getVisibleNodes(nodes, steps, currentStepIndex)
+        : new Set(nodes.map(n => n.nodeID))
+
+    const nodesToRender = nodes.filter(n => visibleNodeIds.has(n.nodeID))
+    const edgesToRender = edges.filter(e => visibleNodeIds.has(e.fromNode) && visibleNodeIds.has(e.toNode))
+
+    const positions = computeLayout(nodesToRender, edgesToRender)
     const svgHeight = computeHeight(positions)
 
     const currentStep = steps && steps.length > 0 ? steps[currentStepIndex] : null
@@ -169,7 +191,7 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete }) {
                 </defs>
 
                 {/* Edges */}
-                {edges.map((edge, i) => {
+                {edgesToRender.map((edge, i) => {
                     const from = positions[edge.fromNode]
                     const to = positions[edge.toNode]
                     if (!from || !to) return null // no arrow here
@@ -189,7 +211,7 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete }) {
                 })}
 
                 {/* Nodes */}
-                {nodes.map(node => {
+                {nodesToRender.map(node => {
                     const pos = positions[node.nodeID]
                     if (!pos) return null
                     const { fill, stroke, text } = getNodeColor(node.nodeID, highlightedNodes, isComplete)
