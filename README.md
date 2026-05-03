@@ -61,7 +61,8 @@ App                          — owns all states to be updated (algorithm, steps
 ├── AlgorithmPicker          — user selects active algorithm, states mutated
 ├── ArrayInput               — text input + Visualize button, makes the API request to backend
 ├── Visualizer               — renders graphics for current step
-└── StepControls             — play/pause/skip/adjust controls with a range slider to go between steps
+├── StepControls             — play/pause/skip/adjust controls with a range slider to go between steps
+└── GraphVisualizer          - renders graphics for graphs/trees and related algorithms, current step
 ```
 
 The flow of data is strict: raw information flows down as properties, events go back up as callbacks, and the backend is only ever contacted once by `ArrayInput`. Any other component is purely reliant on the step array stored in state. Functions mutate the state as required.
