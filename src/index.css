@@ -5,8 +5,9 @@
 }
 
 :root {
-    --primary-blue: rgb(31, 75, 104);
-    --primary-offwhite: rgb(246, 238, 220);
+    --primary-blue: #1f4b68;
+    --primary-offwhite: #f6eedc;
+    --secondary-blue: #3281a8;
     /* --node-default-fill: #e8e0cc;
     --node-default-stroke: #a09070;
     --node-visited-fill: #E6F1FB;
@@ -268,4 +269,62 @@ input[type="range"] {
     font-size: 10px;
     margin-top: 4px;
     font-family: monospace;
+}
+
+.mode-picker {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.mode-picker button {
+    padding: 10px 28px;
+    border: 2px solid var(--primary-blue);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--primary-blue);
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.mode-picker button.active {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.mode-picker button:disabled {
+    /* for modes not yet implemented */
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #888;
+    color: #888;
+}
+
+/* tree subtype picker - ex. bst */
+.tree-subtype {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.tree-subtype button {
+    padding: 4px 16px;
+    border: 1.5px solid #888;
+    border-radius: 20px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.tree-subtype button.active {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background: rgba(31, 75, 104, 0.08);
 }

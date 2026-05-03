@@ -3,6 +3,9 @@ import AlgorithmPicker from "./AlgorithmPicker"
 import ArrayInput from "./ArrayInput"
 import Visualizer from "./Visualizer"
 import StepControls from "./StepControls"
+import GraphVisualizer from "./GraphVisualizer"
+import ModePicker from "./ModePicker"
+import BSTControls from "./BSTControls"
 
 function App() {
     // const [curVal, setVal] = useState(initial_val)
@@ -11,6 +14,12 @@ function App() {
     const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const [isPlaying, setIsPlaying] = useState(false)
 
+    // for selecting mode
+    const [mode, setMode] = useState("sort") // sort | graph | tree | more later maybe
+    const [bstMode, setBstMode] = useState("insert") // bst | more types later
+    const [bstTarget, setBstTarget] = useState("")
+    const [graphData, setGraphData] = useState(null)
+
     function handleStepsLoaded(newSteps) {
         setSteps(newSteps)      // store steps in state
         setCurrentStepIndex(0)  // reset step index
@@ -18,14 +27,25 @@ function App() {
     }
 
     function handleNext() {
-        setCurrentStepIndex((i) => Math.min(i + 1, steps.length - 1)) // increment and bound values to avoid oob
+        const total = mode === "sort" ? steps.length : graphData?.steps?.length ?? 0
+        setCurrentStepIndex((i) => Math.min(i + 1, total - 1)) // increment and bound values to avoid oob
     }
 
     function handlePrev() {
         setCurrentStepIndex((i) => Math.max(i - 1, 0)) // index 0 = steps[0] ^^ bound values
     }
 
-    const isComplete = steps.length > 0 && currentStepIndex === steps.length - 1 // at end of steps
+    const isComplete = mode === "sort"
+        ? steps.length > 0 && currentStepIndex === steps.length - 1 // at end of steps
+        : graphData?.steps?.length > 0 && currentStepIndex === graphData.steps.length - 1
+
+    function handleModeSwitch(m) {
+        setMode(m)
+        setSteps([])
+        setGraphData(null)
+        setCurrentStepIndex(0)
+        setIsPlaying(false)
+    }
 
     // for insertion sort - not so efficient...
     function getSortedBoundary(steps, index) {
@@ -44,33 +64,103 @@ function App() {
         ? getSortedBoundary(steps, currentStepIndex)
         : -1
 
+
+    async function handleBstVisualize(inputStr) {
+        const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080"
+        try {
+            let url
+            if (bstMode === "insert") {
+                url = `${BASE_URL}/tree/bst/insert?input=${inputStr}`
+            }
+            else if (bstMode === "search") {
+                url = `${BASE_URL}/tree/bst/search?input=${inputStr}&target=${bstTarget}`
+            }
+            else { // build
+                url = `${BASE_URL}/tree/bst?input=${inputStr}`
+            }
+
+            const response = await fetch(url)
+            const data = await response.json()
+            setGraphData(data)
+            setCurrentStepIndex(0)
+            setIsPlaying(false)
+        }
+        catch (err) {
+            const { demoData } = await import("./demo/demoData")
+            const demo = bstMode === "search" ? demoData["bst-search"] : demoData["bst-insert"]
+            setGraphData(demo.response)
+            setCurrentStepIndex(0)
+        }
+    }
+
+    const totalSteps = mode === "sort" ? steps.length : graphData?.steps?.length ?? 0
+
+
     return (
         <div className="app">
             <h1>Algorithm Visualizer</h1>
-            <AlgorithmPicker
-                algorithm={algorithm}
-                onSelect={setAlgorithm}
+
+            <ModePicker
+                mode={mode}
+                onSelect={handleModeSwitch}
             />
-            <ArrayInput
-                algorithm={algorithm}
-                onStepsLoaded={handleStepsLoaded}
-            />
-            <Visualizer
-                step={steps[currentStepIndex]}
-                isComplete={isComplete}
-                algorithm={algorithm}
-                sortedBoundary={sortedBoundary}
-            />
+
+            {mode === "sort" && (
+                <>
+                    <AlgorithmPicker
+                        algorithm={algorithm}
+                        onSelect={setAlgorithm}
+                    />
+                    <ArrayInput
+                        algorithm={algorithm}
+                        onStepsLoaded={handleStepsLoaded}
+                    />
+                    <Visualizer
+                        step={steps[currentStepIndex]}
+                        isComplete={isComplete}
+                        algorithm={algorithm}
+                        sortedBoundary={sortedBoundary}
+                    />
+                </>
+            )}
+
+            {mode === "tree" && (
+                <>
+                    {/* tree subtype picker */}
+                    <div className="tree-subtype">
+                        <button className="active">BST</button>
+                    </div>
+                    <BSTControls
+                        bstMode={bstMode}
+                        setBstMode={setBstMode}
+                        bstTarget={bstTarget}
+                        setBstTarget={setBstTarget}
+                        onVisualize={handleBstVisualize}
+                    />
+                    <GraphVisualizer
+                        graphData={graphData}
+                        currentStepIndex={currentStepIndex}
+                        isComplete={isComplete}
+                    />
+                </>
+            )}
+
+            {mode === "graph" && (
+                <div className="visualizer-empty">
+                    Graph algorithms on the way, check back later!
+                </div>
+            )}
+
             <StepControls
                 currentStepIndex={currentStepIndex}
-                totalSteps={steps.length}
+                totalSteps={totalSteps}
                 isPlaying={isPlaying}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onNext={handleNext}
                 onPrev={handlePrev}
                 onFirst={() => setCurrentStepIndex(0)}
-                onLast={() => setCurrentStepIndex(steps.length - 1)}
+                onLast={() => setCurrentStepIndex(totalSteps - 1)}
                 onScrub={setCurrentStepIndex}
             />
         </div>
