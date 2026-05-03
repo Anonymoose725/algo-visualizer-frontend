@@ -48,6 +48,12 @@ Then run the backend locally (see instructions in its README). Without a running
 
 ---
 
+## Demo mode
+
+The website includes pre-generated steps for all implemented algorithms. If the backend is not running locally or on a hosted environment, the site app defaults to a hardcoded demo fallback to be visualized as normal. This mode can be enabled manually with the "load demo" button!
+
+---
+
 ## Component structure
 
 ```
