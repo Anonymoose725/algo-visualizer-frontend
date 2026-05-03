@@ -41,6 +41,15 @@ function ArrayInput({ algorithm, onStepsLoaded }) {
         disabled = loading || !inputValue : disables the button when loading or if the input is empty, prevents false submission
         error && <...> : conditional rendering, if error is null, nothing renders. if error has a message, <p> renders
     */
+
+    function loadDemo() {
+        const demo = demoData[algorithm]
+        if (demo) {
+            setInputValue(demo.input)
+            onStepsLoaded(demo.steps)
+        }
+    }
+
     return (
         <div className="array-input">
             <input
@@ -54,7 +63,12 @@ function ArrayInput({ algorithm, onStepsLoaded }) {
             <button onClick={handleVisualize} disabled={loading || !inputValue}>
                 {loading ? "Loading..." : "Visualize"}
             </button>
-            {error && <p className="error">{error}</p>}
+            <button onClick={loadDemo}>Load demo</button>
+            {error && (
+                <p className={error.includes("demo") ? "demo-warn" : "error"}>
+                    {error}
+                </p>
+            )}
         </div>
     )
 }

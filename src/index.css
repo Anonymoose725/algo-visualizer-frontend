@@ -97,6 +97,11 @@ h1 {
     font-size: 0.85rem;
 }
 
+.demo-warn {
+    color: var(--color-warning, #ba7517);
+    font-size: 0.85rem;
+}
+
 /* Visualizer */
 .visualizer {
     display: flex;
