@@ -8,8 +8,14 @@ function BSTControls({ bstMode, setBstMode, bstTarget, setBstTarget, onVisualize
     }
 
     function loadDemo() {
-        setInputValue("5,3,7,1,4,6,8")
-        onVisualize("5,3,7,1,4,6,8")
+        if (bstMode === "search") {
+            setInputValue("5,3,7,1,4,6,8")
+            setBstTarget("4")
+            onVisualize("5,3,7,1,4,6,8")
+        } else {
+            setInputValue("5,3,7,1,4,6,8")
+            onVisualize("5,3,7,1,4,6,8")
+        }
     }
 
     return (
