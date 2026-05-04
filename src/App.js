@@ -6,6 +6,7 @@ import StepControls from "./StepControls"
 import GraphVisualizer from "./GraphVisualizer"
 import ModePicker from "./ModePicker"
 import BSTControls from "./BSTControls"
+import InfoPanel from "./InfoPanel"
 
 function App() {
     // const [curVal, setVal] = useState(initial_val)
@@ -131,6 +132,8 @@ function App() {
     return (
         <div className="app">
             <h1>Algorithm Visualizer</h1>
+
+            <InfoPanel />
 
             <ModePicker
                 mode={mode}
