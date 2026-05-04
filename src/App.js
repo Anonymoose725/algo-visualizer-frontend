@@ -20,6 +20,10 @@ function App() {
     const [bstTarget, setBstTarget] = useState("")
     const [graphData, setGraphData] = useState(null)
 
+    // error catching
+    const [bstError, setBstError] = useState("")
+
+
     function handleStepsLoaded(newSteps) {
         setSteps(newSteps)      // store steps in state
         setCurrentStepIndex(0)  // reset step index
@@ -66,7 +70,17 @@ function App() {
 
 
     async function handleBstVisualize(inputStr) {
+
+        // validate before fetching
+        if (bstMode === "search" && !bstTarget) {
+            setBstError("Please enter a target value to search for")
+            return
+        }
+        setBstError("")
+
         const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080"
+
+        let response
         try {
             let url
             if (bstMode === "insert") {
@@ -75,22 +89,40 @@ function App() {
             else if (bstMode === "search") {
                 url = `${BASE_URL}/tree/bst/search?input=${inputStr}&target=${bstTarget}`
             }
-            else { // build
+            else {
                 url = `${BASE_URL}/tree/bst?input=${inputStr}`
             }
+            response = await fetch(url)
 
-            const response = await fetch(url)
-            const data = await response.json()
-            setGraphData(data)
-            setCurrentStepIndex(0)
-            setIsPlaying(false)
-        }
-        catch (err) {
+        } catch (err) {
+            // backend unreachable, fall back to demo
             const { demoData } = await import("./demo/demoData")
-            const demo = bstMode === "search" ? demoData["bst-search"] : demoData["bst-insert"]
+            const demo = bstMode === "search"
+                ? demoData["bst-search"]
+                : demoData["bst-insert"]
             setGraphData(demo.response)
             setCurrentStepIndex(0)
+            setBstError("")
+            return
         }
+
+        // backend responded, check status
+        if (!response.ok) {
+            setGraphData(null)
+            if (bstMode === "search") {
+                setBstError("Invalid input, check for duplicates or invalid target")
+            }
+            else {
+                setBstError("Duplicate values are not supported")
+            }
+            return
+        }
+
+        setBstError("")
+        const data = await response.json()
+        setGraphData(data)
+        setCurrentStepIndex(0)
+        setIsPlaying(false)
     }
 
     const totalSteps = mode === "sort" ? steps.length : graphData?.steps?.length ?? 0
@@ -130,6 +162,7 @@ function App() {
                     <div className="tree-subtype">
                         <button className="active">BST</button>
                     </div>
+
                     <BSTControls
                         bstMode={bstMode}
                         setBstMode={setBstMode}
@@ -137,12 +170,16 @@ function App() {
                         setBstTarget={setBstTarget}
                         onVisualize={handleBstVisualize}
                     />
-                    <GraphVisualizer
-                        graphData={graphData}
-                        currentStepIndex={currentStepIndex}
-                        isComplete={isComplete}
-                        bstMode={bstMode}
-                    />
+
+                    {bstError && <p className="error">{bstError}</p>}
+                    {!bstError && (
+                        <GraphVisualizer
+                            graphData={graphData}
+                            currentStepIndex={currentStepIndex}
+                            isComplete={isComplete}
+                            bstMode={bstMode}
+                        />
+                    )}
                 </>
             )}
 
