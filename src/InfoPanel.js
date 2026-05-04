@@ -45,7 +45,7 @@ function InfoPanel() {
                         <a href="https://github.com/Anonymoose725/algo-visualizer-frontend" target="_blank" rel="noreferrer">
                             GitHub — Frontend
                         </a>
-                        <a href="https://linkedin.com/in/my-name" target="_blank" rel="noreferrer">
+                        <a href="https://linkedin.com/in/ethan-gat" target="_blank" rel="noreferrer">
                             LinkedIn
                         </a>
                     </div>
