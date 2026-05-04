@@ -23,6 +23,12 @@
     margin: 0 auto;
     box-sizing: border-box;
     overflow-x: hidden;
+    align-items: center;
+}
+
+.app>* {
+    width: 100%
+        /* ensures children are centered horizontally with full width */
 }
 
 body {
@@ -340,4 +346,46 @@ input[type="range"] {
     border-color: var(--primary-blue);
     color: var(--primary-blue);
     background: rgba(31, 75, 104, 0.08);
+}
+
+.graph-visualizer {
+    margin-top: 16px;
+    width: 100%;
+}
+
+.zoom-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.zoom-controls button {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1.5px solid var(--primary-blue);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--primary-blue);
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zoom-controls button:hover {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.zoom-label {
+    font-size: 0.85rem;
+    color: #888;
+    font-family: monospace;
+    min-width: 40px;
 }

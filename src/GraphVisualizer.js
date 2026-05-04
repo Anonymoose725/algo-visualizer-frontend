@@ -1,56 +1,8 @@
-import React from "react"
+import { useState, useRef } from "react"
 
 const WIDTH = 680
-const LEVEL_HEIGHT = 90
+const LEVEL_HEIGHT = 75
 const NODE_RADIUS = 24
-
-// function computeLayout(nodes, edges) {
-//     if (!nodes.length) return {}
-
-//     // adjacency map
-//     const children = {}
-//     nodes.forEach(n => children[n.nodeID] = [])
-//     edges.forEach(e => children[e.fromNode].push(e.toNode))
-
-//     // find root
-//     const toNodes = new Set(edges.map(e => e.toNode))
-//     const root = nodes.find(n => !toNodes.has(n.nodeID)) // indegree = 0
-
-//     // BFS
-//     const depths = {}
-//     const queue = [root.nodeID]
-//     depths[root.nodeID] = 0
-
-//     while (queue.length) { // while !q.isEmpty
-//         const cur = queue.shift() // poll
-//         for (const child of children[cur]) {
-//             depths[child] = depths[cur] + 1
-//             queue.push(child)
-//         }
-//     }
-
-//     // group by level
-//     const levels = {}
-//     nodes.forEach(n => {
-//         const depth = depths[n.nodeID] ?? 0
-//         if (!levels[depth]) levels[depth] = []
-//         levels[depth].push(n.nodeID)
-//     })
-
-//     // assign x positions, spreading evenly
-//     const positions = {}
-//     Object.entries(levels).forEach(([depth, ids]) => {
-//         const count = ids.length
-//         ids.forEach((id, i) => {
-//             positions[id] = {
-//                 x: (WIDTH / (count + 1)) * (i + 1),
-//                 y: parseInt(depth) * LEVEL_HEIGHT + 60
-//             }
-//         })
-//     })
-
-//     return positions
-// }
 
 // revision for correctness: nodes must be placed with awareness of parent, so that children are placed on left/right correctly
 function computeLayout(nodes, edges) {
@@ -125,6 +77,14 @@ function getNodeColor(id, highlightedNodes, isComplete) {
 }
 
 function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
+
+    // for zoom, pan
+    const [zoom, setZoom] = useState(1)
+    const [panX, setPanX] = useState(0)
+    const [panY, setPanY] = useState(0)
+    const [isDragging, setIsDragging] = useState(false)
+    const dragStart = useRef({ x: 0, y: 0 }) // provides a ref, mutable state, so we dont need to re-render when drag position updates
+
     if (!graphData) {
         return (
             <div className="visualizer-empty">
@@ -162,12 +122,58 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
     const currentStep = steps && steps.length > 0 ? steps[currentStepIndex] : null
     const highlightedNodes = currentStep ? currentStep.highlightedNodes : isComplete ? nodes.map(n => n.nodeID) : []
 
+    // viewbox
+    const viewBoxWidth = WIDTH / zoom
+    const viewBoxHeight = svgHeight / zoom
+    const viewBox = `${panX} ${panY} ${viewBoxWidth} ${viewBoxHeight}`
+
+    function zoomIn() { setZoom(z => Math.min(z * 1.5, 8)) }
+    function zoomOut() { setZoom(z => Math.max(z / 1.5, 0.5)) }
+    function resetView() { setZoom(1); setPanX(0); setPanY(0) }
+
+    function handleMouseDown(e) {
+        setIsDragging(true)
+        dragStart.current = { x: e.clientX, y: e.clientY }
+        e.preventDefault()
+    }
+
+    function handleMouseMove(e) {
+        if (!isDragging) return
+        const dx = (e.clientX - dragStart.current.x) / zoom
+        const dy = (e.clientY - dragStart.current.y) / zoom
+        setPanX(x => x - dx) // offset by panned amount
+        setPanY(y => y - dy)
+        dragStart.current = { x: e.clientX, y: e.clientY }
+    }
+
+    function handleMouseUp() {
+        setIsDragging(false)
+    }
+
     return (
         <div className="graph-visualizer">
+
+            {/* zoom controls */}
+            <div className="zoom-controls">
+                <button onClick={zoomOut}>-</button>
+                <button onClick={resetView}>reset</button>
+                <button onClick={zoomIn}>+</button>
+                <span className="zoom-label">{Math.round(zoom * 100)}%</span>
+            </div>
+
             <svg
                 width="100%"
-                viewBox={`0 0 ${WIDTH} ${svgHeight}`}
-                style={{ overflow: "visible" }}
+                viewBox={viewBox}
+                style={{
+                    overflow: "hidden",
+                    cursor: isDragging ? "grabbing" : "grab",
+                    height: "320px",
+                    display: "block"
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
             >
                 <defs>
                     <marker
@@ -232,8 +238,12 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
                                 textAnchor="middle"
                                 dominantBaseline="central"
                                 style={{
-                                    fontSize: "14px", fontWeight: "500",
-                                    fill: text, fontFamily: "monospace", userSelect: "none"
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    fill: text,
+                                    fontFamily: "monospace",
+                                    userSelect: "none",
+                                    pointerEvents: "none" // prevents text from interfering with drag events on the SVG
                                 }}
                             >
                                 {node.nodeValue}
