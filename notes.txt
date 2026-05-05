@@ -253,3 +253,72 @@ function computeLayout(nodes, edges) {
 
     return positions
 }
+
+
+
+
+
+---- Graphs w/ Dijkstra's! ----
+
+Requires a GraphBuilder component!
+
+GraphBuilder
+1. add nodes: user clicks on empty canvas, node is created, user types a value
+2. add edges: user clicks an existing node, then another, user types a weight
+3. delete edges / nodes: user selects and deletes (potential for an undo button)
+4. export: drawn graph converted to an adjacency list, handed to backend
+5. run dijkstra's: pick a source node, send to the backend, animate results
+
+
+modes:
+[ add node ] [ add edge ] [ delete node / edge ] [ run dijkstra's ]
+    |           |                |                      |
+    |           |                |                      > click a source node, dijkstra's runs
+    |           |                > clicking node/edge deletes it
+    |           > when enabled, clicking source and dest nodes adds edge, enter weight popup
+    > when enabled, clicking an empty spot on canvas creates a node at (x,y)
+
+
+states:
+
+const [nodes, setNodes] = useState([]) || where node = { id, x, y, label }
+const [edges, setEdges] = useState([]) || where edge = { id, from, to, weight }
+const [graphMode, setGraphMode] = useState("addNode") || where states are addNode | addEdge | delete | run s
+const [selectedNode, setSelectedNode] = useState(null) || where selectedNode = {id} used in addEdge mode
+const [pendingEdge, setPendingEdge] = useState(null) || where pending = { from, to, x, y } enabled weight-request popup near midpoint
+const [dijkstraResult, setDijkstraResult] = useState(null) || steps from backend
+
+more functionality:
+
+- users should be able to drag to rearrange nodes
+    - should have no imapct on math: adjacency list stays same, edges remain, weights and values unchanged
+    - gives user a LOT of freedom, hard to restrict. we shouldnt be too strict with visual niceness.
+    - (let the user do mostly whatever they want, pretty much)
+
+- svg canvas from GraphVisualizer
+    - graph builder is an SVG
+    - nodes are circles, edges are lines with arrows (directed) and weight labels
+
+details:
+
+- nodes assigned A->Z to be consistent with graph theory
+- selected node highlighted amber to differentiate from "done" or "visisted" states (during edge creation)
+- dijkstra's source node highlighted distinct colour, maybe purple or orange
+- dijkstra's visited: blue highlight
+- dijkstra's done: green (shortest path found)
+- add hints for graph modes
+    - add node: "Click canvas to place a node. Drag existing nodes to reposition."
+    - add edge: "Click a source node, then a destination to create an edge"
+    - delete: "Click an existing edge or node to delete it"
+    - run: "Click a source node to run Dijkstra's Shortest Path algorithm"
+
+letter assignment:
+
+const LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+traverse as needed:
+
+function nextLabel(nodes) {
+    const used = new Set(nodes.map(n => n.label))
+    return LABELS.split("").find(l => !used.has(l)) ?? "?"
+}
