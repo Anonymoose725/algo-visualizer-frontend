@@ -7,6 +7,7 @@ import GraphVisualizer from "./GraphVisualizer"
 import ModePicker from "./ModePicker"
 import BSTControls from "./BSTControls"
 import InfoPanel from "./InfoPanel"
+import GraphBuilder from "./GraphBuilder"
 
 function App() {
     // const [curVal, setVal] = useState(initial_val)
@@ -187,8 +188,8 @@ function App() {
             )}
 
             {mode === "graph" && (
-                <div className="visualizer-empty">
-                    Graph algorithms on the way, check back later!
+                <div style={{ position: "relative" }}>
+                    <GraphBuilder />
                 </div>
             )}
 

@@ -10,8 +10,6 @@ function ModePicker({ mode, onSelect }) {
             <button
                 className={mode === "graph" ? "active" : ""}
                 onClick={() => onSelect("graph")}
-                disabled
-                title="Come back later!"
             >
                 Graphs
             </button>
