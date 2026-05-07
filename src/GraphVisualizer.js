@@ -111,10 +111,11 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
 
     const visibleNodeIds = bstMode === "insert"
         ? getVisibleNodes(nodes, steps, currentStepIndex)
-        : new Set(nodes.map(n => n.nodeID))
+        : new Set(nodes.map(n => String(n.nodeID)))
 
-    const nodesToRender = nodes.filter(n => visibleNodeIds.has(n.nodeID))
-    const edgesToRender = edges.filter(e => visibleNodeIds.has(e.fromNode) && visibleNodeIds.has(e.toNode))
+    const nodesToRender = nodes.filter(n => visibleNodeIds.has(String(n.nodeID)))
+    const edgesToRender = edges.filter(e =>
+        visibleNodeIds.has(String(e.fromNode)) && visibleNodeIds.has(String(e.toNode)))
 
     const positions = computeLayout(nodesToRender, edgesToRender)
     const svgHeight = computeHeight(positions)
