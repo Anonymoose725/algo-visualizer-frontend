@@ -120,7 +120,9 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
     const svgHeight = computeHeight(positions)
 
     const currentStep = steps && steps.length > 0 ? steps[currentStepIndex] : null
-    const highlightedNodes = currentStep ? currentStep.highlightedNodes : isComplete ? nodes.map(n => n.nodeID) : []
+    const highlightedNodes = currentStep
+        ? currentStep.highlightedNodes
+        : isComplete ? nodes.map(n => String(n.nodeID)) : []
 
     // viewbox
     const viewBoxWidth = WIDTH / zoom
