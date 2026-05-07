@@ -68,7 +68,7 @@ function getNodeColor(id, highlightedNodes, isComplete) {
     if (isComplete) return { fill: "#EAF3DE", stroke: "#3B6D11", text: "#3B6D11" }
     if (!highlightedNodes || !highlightedNodes.length)
         return { fill: "rgb(31, 75, 104)", stroke: "rgb(21, 55, 80)", text: "#ffffff" }
-    const idx = highlightedNodes.indexOf(String(node.nodeID))
+    const idx = highlightedNodes.indexOf(String(id))
     if (idx === -1)
         return { fill: "rgb(31, 75, 104)", stroke: "rgb(21, 55, 80)", text: "#ffffff" }
     if (idx === highlightedNodes.length - 1)
