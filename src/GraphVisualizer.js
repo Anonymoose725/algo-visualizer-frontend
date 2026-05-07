@@ -96,14 +96,12 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
     const { nodes, edges, steps } = graphData // deconstruct
 
     function getVisibleNodes(nodes, steps, currentStepIndex) {
-        if (!steps || !steps.length) return new Set(nodes.map(n => n.nodeID))
-
+        if (!steps || !steps.length) return new Set(nodes.map(n => String(n.nodeID)))
         const visible = new Set()
         for (let i = 0; i <= currentStepIndex; i++) {
             const h = steps[i].highlightedNodes
             if (h.length > 0) {
-                // take the last node in h, since the last node in each step is the one which is newly inserted
-                visible.add(h[h.length - 1])
+                visible.add(Number(h[h.length - 1]))  // convert string to number
             }
         }
         return visible
@@ -111,18 +109,18 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
 
     const visibleNodeIds = bstMode === "insert"
         ? getVisibleNodes(nodes, steps, currentStepIndex)
-        : new Set(nodes.map(n => String(n.nodeID)))
+        : new Set(nodes.map(n => n.nodeID))
 
-    const nodesToRender = nodes.filter(n => visibleNodeIds.has(String(n.nodeID)))
+    const nodesToRender = nodes.filter(n => visibleNodeIds.has(n.nodeID))
     const edgesToRender = edges.filter(e =>
-        visibleNodeIds.has(String(e.fromNode)) && visibleNodeIds.has(String(e.toNode)))
+        visibleNodeIds.has(e.fromNode) && visibleNodeIds.has(e.toNode))
 
     const positions = computeLayout(nodesToRender, edgesToRender)
     const svgHeight = computeHeight(positions)
 
     const currentStep = steps && steps.length > 0 ? steps[currentStepIndex] : null
     const highlightedNodes = currentStep
-        ? currentStep.highlightedNodes
+        ? currentStep.highlightedNodes // strings from backend like ["0", "1"]
         : isComplete ? nodes.map(n => String(n.nodeID)) : []
 
     // viewbox
@@ -152,6 +150,14 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
     function handleMouseUp() {
         setIsDragging(false)
     }
+
+
+    // DEBUG
+    console.log("visibleNodeIds:", [...visibleNodeIds])
+    console.log("node IDs:", nodes.map(n => n.nodeID), "as strings:", nodes.map(n => String(n.nodeID)))
+    console.log("nodesToRender count:", nodesToRender.length)
+
+    console.log("highlightedNodes:", highlightedNodes)
 
     return (
         <div className="graph-visualizer">
