@@ -64,17 +64,20 @@ function edgeEndpoints(x1, y1, x2, y2, r) {
     }
 }
 
+
+// node.nodeID is an int, highlightedNodes is a list of strings from bsckend
 function getNodeColor(id, highlightedNodes, isComplete) {
     if (isComplete) return { fill: "#EAF3DE", stroke: "#3B6D11", text: "#3B6D11" }
     if (!highlightedNodes || !highlightedNodes.length)
         return { fill: "rgb(31, 75, 104)", stroke: "rgb(21, 55, 80)", text: "#ffffff" }
-    const idx = highlightedNodes.indexOf(String(id))
+    const idx = highlightedNodes.indexOf(String(id))  // number → string for comparison
     if (idx === -1)
         return { fill: "rgb(31, 75, 104)", stroke: "rgb(21, 55, 80)", text: "#ffffff" }
     if (idx === highlightedNodes.length - 1)
         return { fill: "#EAF3DE", stroke: "#3B6D11", text: "#3B6D11" }
     return { fill: "#E6F1FB", stroke: "#185FA5", text: "#185FA5" }
 }
+
 
 function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
 
@@ -95,18 +98,20 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
 
     const { nodes, edges, steps } = graphData // deconstruct
 
+    // ids (ints)
     function getVisibleNodes(nodes, steps, currentStepIndex) {
-        if (!steps || !steps.length) return new Set(nodes.map(n => String(n.nodeID)))
+        if (!steps || !steps.length) return new Set(nodes.map(n => n.nodeID))
         const visible = new Set()
         for (let i = 0; i <= currentStepIndex; i++) {
             const h = steps[i].highlightedNodes
             if (h.length > 0) {
-                visible.add(Number(h[h.length - 1]))  // convert string to number
+                visible.add(Number(h[h.length - 1]))  // "0" → 0
             }
         }
         return visible
     }
 
+    // all comparisons use numbers
     const visibleNodeIds = bstMode === "insert"
         ? getVisibleNodes(nodes, steps, currentStepIndex)
         : new Set(nodes.map(n => n.nodeID))
@@ -151,13 +156,6 @@ function GraphVisualizer({ graphData, currentStepIndex, isComplete, bstMode }) {
         setIsDragging(false)
     }
 
-
-    // DEBUG
-    console.log("visibleNodeIds:", [...visibleNodeIds])
-    console.log("node IDs:", nodes.map(n => n.nodeID), "as strings:", nodes.map(n => String(n.nodeID)))
-    console.log("nodesToRender count:", nodesToRender.length)
-
-    console.log("highlightedNodes:", highlightedNodes)
 
     return (
         <div className="graph-visualizer">

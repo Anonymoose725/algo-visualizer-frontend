@@ -10,42 +10,42 @@ function generateNextLabel(nodes) {
     return LABELS.split("").find(l => !used.has(l)) ?? "?"
 }
 
+// node is the full node object with .label (string) and .id (int)
+// highlightedNodes contains label strings
 function getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, currentStepIndex) {
     if (dijkstraResult && dijkstraSource === node.id) {
-        return { fill: "#E8893C", stroke: "#B05510", text: "#ffffff" } // amber = dijkstra source
+        return { fill: "#E8893C", stroke: "#B05510", text: "#ffffff" }
     }
-
     if (dijkstraResult) {
         const step = dijkstraResult.steps[currentStepIndex]
         if (step) {
             const highlighted = step.highlightedNodes ?? []
-            const indexOfX = highlighted.indexOf(node.id)
-
-            if (indexOfX !== -1) {
-                if (indexOfX === highlighted.length - 1) { // last entry
-                    return { fill: "#EAF3DE", stroke: "#3B6D11", text: "#3B6D11" } // complete
-                }
-                else return { fill: "#E6F1FB", stroke: "#185FA5", text: "#185FA5" } // dijkstra visited
+            const idx = highlighted.indexOf(node.label)  // label comparison
+            if (idx !== -1) {
+                if (idx === highlighted.length - 1)
+                    return { fill: "#EAF3DE", stroke: "#3B6D11", text: "#3B6D11" }
+                return { fill: "#E6F1FB", stroke: "#185FA5", text: "#185FA5" }
             }
-            return
         }
-        else return { fill: "rgb(31,75,104)", stroke: "rgb(21,55,80)", text: "#ffffff" } // unvisited/unrelated, primary blue
+        return { fill: "rgb(31,75,104)", stroke: "rgb(21,55,80)", text: "#ffffff" }
     }
-
     if (selectedNode === node.id) {
-        return { fill: "#F0C040", stroke: "#B08000", text: "#1a1a1a" } // orange = selected in edge creation
+        return { fill: "#F0C040", stroke: "#B08000", text: "#1a1a1a" }
     }
-    else return { fill: "rgb(31,75,104)", stroke: "rgb(21,55,80)", text: "#ffffff" } // unrelated, primary blue
+    return { fill: "rgb(31,75,104)", stroke: "rgb(21,55,80)", text: "#ffffff" }
 }
 
-function getEdgeColor(edge, dijkstraResult, currentStepIndex) {
-    if (!dijkstraResult) return "#8A7F6E" // grey out unrelated edges
+function getEdgeColor(edge, gnodes, dijkstraResult, currentStepIndex) {
+    if (!dijkstraResult) return "#8A7F6E"
     const step = dijkstraResult.steps[currentStepIndex]
     if (!step) return "#8A7F6E"
-
     const highlighted = step.highlightedEdges ?? []
-    const isHighlighted = highlighted.some(([f, t]) => f === edge.from && t === edge.to) // f = from, t = to
-
+    const fromNode = gnodes.find(n => n.id === edge.from)
+    const toNode = gnodes.find(n => n.id === edge.to)
+    if (!fromNode || !toNode) return "#8A7F6E"
+    const isHighlighted = highlighted.some(([f, t]) =>
+        f === fromNode.label && t === toNode.label
+    )
     return isHighlighted ? "#185FA5" : "#8A7F6E"
 }
 
@@ -264,7 +264,8 @@ function GraphBuilder({ onGraphReady }) {
         const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080"
 
         try {
-            const response = await fetch(`${BASE_URL}/graph/dijkstra?edges=${edgeList}&source=${sourceLabel}`) // call backend!
+            const response = await fetch(`${BASE_URL}/graph/dijkstra?edges=${encodeURIComponent(edgeList)}&source=${sourceLabel}`)
+            // call backend! encode so ; and , arent lost, should be decoded by servant automatically
             if (!response.ok) {
                 throw new Error("Backend err") // catch
             }
@@ -383,7 +384,7 @@ function GraphBuilder({ onGraphReady }) {
                     if (!from || !to) return null
                     const ep = edgeEndpoints(from.x, from.y, to.x, to.y, NODE_RADIUS)
                     const mid = edgeMidpoint(from.x, from.y, to.x, to.y)
-                    const color = getEdgeColor(edge, dijkstraResult, currentStepIndex)
+                    const color = getEdgeColor(edge, gnodes, dijkstraResult, currentStepIndex)
                     const markerId = color === "#185FA5" ? "graphbuild-arrow-blue" : "graphbuild-arrow"
                     return (
                         <g key={edge.id} onClick={e => handleEdgeClick(e, edge)}
@@ -448,6 +449,30 @@ function GraphBuilder({ onGraphReady }) {
                             >
                                 {node.label}
                             </text>
+
+                            {/* current shortest computed distances */}
+                            {dijkstraResult && (() => {
+                                const step = dijkstraResult.steps[currentStepIndex]
+                                if (!step) return null
+                                const distEntry = step.distances?.find(([label]) => label === node.label)
+                                const dist = distEntry ? distEntry[1] : null
+                                return (
+                                    <text
+                                        x={node.x}
+                                        y={node.y - NODE_RADIUS - 6}
+                                        textAnchor="middle"
+                                        style={{
+                                            fontSize: "11px",
+                                            fill: "var(--primary-blue)",
+                                            fontFamily: "monospace",
+                                            userSelect: "none",
+                                            pointerEvents: "none"
+                                        }}
+                                    >
+                                        {dist === null ? "∞" : dist}
+                                    </text>
+                                )
+                            })()}
                         </g>
                     )
                 })}
