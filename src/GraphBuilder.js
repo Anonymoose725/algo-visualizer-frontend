@@ -53,7 +53,7 @@ function edgeMidpoint(x1, y1, x2, y2) {
     return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 } // find midpoint of edge in canvas for weight label and delete spot
 }
 
-function edgeEndpoints(x1, y1, x2, y2, r) {
+function edgeEndpoints(x1, y1, x2, y2, r, offset = 0) { // offset for two edges between same nodes
     const dx = x2 - x1
     const dy = y2 - y1
     const dist = Math.sqrt((dx * dx) + (dy * dy))
@@ -64,11 +64,15 @@ function edgeEndpoints(x1, y1, x2, y2, r) {
 
     const ux = dx / dist // unit normalize
     const uy = dy / dist
+
+    // perpendicular unit vectors
+    const px = -uy
+    const py = ux
     return {
-        x1: x1 + ux * r,
-        y1: y1 + uy * r,
-        x2: x2 - ux * r,
-        y2: y2 - uy * r
+        x1: x1 + ux * r + px * offset, // px * offset = 0 if offset = 0
+        y1: y1 + uy * r + py * offset,
+        x2: x2 - ux * r + px * offset,
+        y2: y2 - uy * r + py * offset
     }
 }
 
@@ -382,8 +386,25 @@ function GraphBuilder({ onGraphReady }) {
                     const from = gnodes.find(n => n.id === edge.from)
                     const to = gnodes.find(n => n.id === edge.to)
                     if (!from || !to) return null
-                    const ep = edgeEndpoints(from.x, from.y, to.x, to.y, NODE_RADIUS)
-                    const mid = edgeMidpoint(from.x, from.y, to.x, to.y)
+
+                    // check if there is a forward and a reverse edge
+                    const hasReverse = gedges.some(e => e.from === edge.to && e.to === edge.from)
+                    const offset = hasReverse ? 8 : 0 // pad if there are two edges
+
+                    const ep = edgeEndpoints(from.x, from.y, to.x, to.y, NODE_RADIUS, offset)
+
+                    const dx = to.x - from.x
+                    const dy = to.y - from.y
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1
+                    const px = -dy / dist  // perpendicular x
+                    const py = dx / dist  // perpendicular y
+
+                    const mid = offset === 0
+                        ? edgeMidpoint(from.x, from.y, to.x, to.y) // calculate traditionally if there is no offset
+                        : { // offset midpoints with perpendicular comps
+                            x: (from.x + to.x) / 2 + px * offset,
+                            y: (from.y + to.y) / 2 + py * offset
+                        }
                     const color = getEdgeColor(edge, gnodes, dijkstraResult, currentStepIndex)
                     const markerId = color === "#185FA5" ? "graphbuild-arrow-blue" : "graphbuild-arrow"
                     return (
