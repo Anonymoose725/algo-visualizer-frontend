@@ -78,3 +78,13 @@ The flow of data is strict: raw information flows down as properties, events go 
 5. `Visualizer` renders the current step: bar heights reflect values, red highlighting and arrows mark the two elements being compared
 6. `StepControls` moves `currentStepIndex` manually or automatically via a 500ms interval if user chooses to press play
 7. On the final step everything turns green to signal completion
+
+
+
+## Roadmap / Changes
+
+**Improvements**
+
+1. Version indicator
+2. Export link
+3. DFS + BFS
