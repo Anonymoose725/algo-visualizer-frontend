@@ -451,26 +451,41 @@ function GraphBuilder({ onGraphReady }) {
                             </text>
 
                             {/* current shortest computed distances */}
-                            {dijkstraResult && (() => {
+                            {dijkstraResult && (() => { // IIFE = immediately invoked function expression
                                 const step = dijkstraResult.steps[currentStepIndex]
                                 if (!step) return null
                                 const distEntry = step.distances?.find(([label]) => label === node.label)
                                 const dist = distEntry ? distEntry[1] : null
-                                return (
-                                    <text
-                                        x={node.x}
-                                        y={node.y - NODE_RADIUS - 6}
-                                        textAnchor="middle"
-                                        style={{
-                                            fontSize: "11px",
-                                            fill: "var(--primary-blue)",
-                                            fontFamily: "monospace",
-                                            userSelect: "none",
-                                            pointerEvents: "none"
-                                        }}
-                                    >
-                                        {dist === null ? "∞" : dist}
-                                    </text>
+                                const distText = dist === null ? "∞" : `δ=${dist}` // delta = distance from origin
+                                const boxWidth = distText.length * 7 + 8 // 7px per char, 8px padding
+                                return ( // recall <g> is an SVG element, like a <div> in html but for SVGs
+                                    <g>
+                                        <rect // background for clarity
+                                            x={node.x - boxWidth / 2}
+                                            y={node.y - NODE_RADIUS - 20}
+                                            width={boxWidth}
+                                            height={16}
+                                            rx="3"
+                                            fill="var(--primary-offwhite)"
+                                            stroke="var(--primary-blue)"
+                                            strokeWidth="0.5"
+                                            opacity="0.9"
+                                        />
+                                        <text
+                                            x={node.x}
+                                            y={node.y - NODE_RADIUS - 8}
+                                            textAnchor="middle"
+                                            style={{
+                                                fontSize: "11px",
+                                                fill: "var(--primary-blue)",
+                                                fontFamily: "monospace",
+                                                userSelect: "none",
+                                                pointerEvents: "none"
+                                            }}
+                                        >
+                                            {dist === null ? "∞" : dist}
+                                        </text>
+                                    </g>
                                 )
                             })()}
                         </g>
