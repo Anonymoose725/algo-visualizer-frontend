@@ -279,7 +279,35 @@ function GraphBuilder({ onGraphReady }) {
             setError("")
 
         } catch (err) {
-            setError("Backend unavailable, connect to backend to run Dijkstra's!")
+            const { demoData } = await import("./demo/demoData")
+            const demo = demoData["dijkstra"]
+            if (demo) {
+                const demoResponse = demo.response
+                setDijkstraResult(demoResponse)
+                // place nodes in a circle
+                const n = demoResponse.nodes.length
+                const cx = CANVAS_WIDTH / 2
+                const cy = CANVAS_HEIGHT / 2
+                const radius = 150
+                const demoNodes = demoResponse.nodes.map((node, i) => ({
+                    id: i,
+                    label: node.nodeLabel,
+                    x: cx + radius * Math.cos((2 * Math.PI * i) / n),
+                    y: cy + radius * Math.sin((2 * Math.PI * i) / n)
+                }))
+                const demoEdges = demoResponse.edges.map((e, i) => ({
+                    id: i + 100,
+                    from: e.fromNode,
+                    to: e.toNode,
+                    weight: e.weight
+                }))
+                setGnodes(demoNodes)
+                setGedges(demoEdges)
+                setCurrentStepIndex(0)
+                setError("Backend unavailable, showing demo graph")
+            } else {
+                setError("Backend unavailable, connect to backend to run Dijkstra's")
+            }
         }
     }
 
