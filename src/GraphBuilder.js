@@ -1,7 +1,7 @@
 import { useState, useRef } from "react"
 
-const CANVAS_WIDTH = 680
-const CANVAS_HEIGHT = 450
+const CANVAS_WIDTH = /*680*/820
+const CANVAS_HEIGHT = /*450*/430
 const NODE_RADIUS = 22
 const LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -279,35 +279,8 @@ function GraphBuilder({ onGraphReady }) {
             setError("")
 
         } catch (err) {
-            const { demoData } = await import("./demo/demoData")
-            const demo = demoData["dijkstra"]
-            if (demo) {
-                const demoResponse = demo.response
-                setDijkstraResult(demoResponse)
-                // place nodes in a circle
-                const n = demoResponse.nodes.length
-                const cx = CANVAS_WIDTH / 2
-                const cy = CANVAS_HEIGHT / 2
-                const radius = 150
-                const demoNodes = demoResponse.nodes.map((node, i) => ({
-                    id: i,
-                    label: node.nodeLabel,
-                    x: cx + radius * Math.cos((2 * Math.PI * i) / n),
-                    y: cy + radius * Math.sin((2 * Math.PI * i) / n)
-                }))
-                const demoEdges = demoResponse.edges.map((e, i) => ({
-                    id: i + 100,
-                    from: e.fromNode,
-                    to: e.toNode,
-                    weight: e.weight
-                }))
-                setGnodes(demoNodes)
-                setGedges(demoEdges)
-                setCurrentStepIndex(0)
-                setError("Backend unavailable, showing demo graph")
-            } else {
-                setError("Backend unavailable, connect to backend to run Dijkstra's")
-            }
+            await loadDijkstraDemo()
+            setError("Backend unavailable — showing demo graph")
         }
     }
 
@@ -333,6 +306,40 @@ function GraphBuilder({ onGraphReady }) {
 
     const totalSteps = dijkstraResult?.steps?.length ?? 0
 
+    async function loadDijkstraDemo() {
+        const { demoData } = await import("./demo/demoData")
+        const demo = demoData["dijkstra"]
+        if (!demo) return
+
+        const demoResponse = demo.response
+        const n = demoResponse.nodes.length
+        const cx = CANVAS_WIDTH / 2
+        const cy = CANVAS_HEIGHT / 2
+        const radius = 150
+
+        const demoNodes = demoResponse.nodes.map((node, i) => ({
+            id: i,
+            label: node.nodeLabel,
+            x: cx + radius * Math.cos((2 * Math.PI * i) / n),
+            y: cy + radius * Math.sin((2 * Math.PI * i) / n)
+        }))
+
+        const demoEdges = demoResponse.edges.map((e, i) => ({
+            id: i + 100,
+            from: e.fromNode,
+            to: e.toNode,
+            weight: e.weight
+        }))
+
+        setGnodes(demoNodes)
+        setGedges(demoEdges)
+        setDijkstraResult(demoResponse)
+        setDijkstraSource(demoNodes[0].id)  // source = first node (A)
+        setCurrentStepIndex(0)
+        setError("")
+        setGraphMode("run")
+    }
+
     return (
         <div className="graph-builder">
             {/* mode menu */}
@@ -351,9 +358,11 @@ function GraphBuilder({ onGraphReady }) {
                         </button>
                     ))}
                 </div>
-                <button className="graph-clear" onClick={clearCanvas}>Clear</button>
             </div>
-
+            <div className="graph-toolbar">
+                <button className="graph-clear" onClick={clearCanvas}>Clear</button>
+                <button className="dijkstra-demo" onClick={loadDijkstraDemo}>Load Dijkstra's demo</button>
+            </div>
             {/* hints */}
             <p className="graph-hint">Hint: {MODE_HINTS[graphMode]}</p>
 
