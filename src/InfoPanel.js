@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 function InfoPanel() {
-    const [open, setOpen] = useState(true) // open by default
+    const [open, setOpen] = useState(false) // closed by default
 
     return (
         <>
@@ -14,11 +14,17 @@ function InfoPanel() {
                 i
             </button>
 
+            {!open && (
+                <span className="info-hint" onClick={() => setOpen(true)}>
+                    click me!
+                </span>
+            )}
+
             {/* panel */}
             <div className={`info-panel ${open ? "open" : ""}`}>
                 <button className="info-close" onClick={() => setOpen(false)}>✕</button>
 
-                <h2>Algorithm Visualizer</h2>
+                <h2>Algorithm Visualizer <span className="info-version">v0.90</span></h2>
 
                 <p className="info-blurb">
                     Designed to educate on classic algorithms, built to explore functional programming.
