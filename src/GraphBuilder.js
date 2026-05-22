@@ -12,12 +12,20 @@ function generateNextLabel(nodes) {
 
 // node is the full node object with .label (string) and .id (int)
 // highlightedNodes contains label strings
-function getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, currentStepIndex) {
+function getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, dfsSource, dfsResult, currentStepIndex) {
+    // dijkstra source handle
     if (dijkstraResult && dijkstraSource === node.id) {
         return { fill: "#E8893C", stroke: "#B05510", text: "#ffffff" }
     }
-    if (dijkstraResult) {
-        const step = dijkstraResult.steps[currentStepIndex]
+    // dfs source handle
+    if (dfsResult && dfsSource === node.id) {
+        return { fill: "#E8893C", stroke: "#B05510", text: "#ffffff" }
+    }
+
+    const curResult = dijkstraResult || dfsResult
+
+    if (curResult) {
+        const step = curResult.steps[currentStepIndex]
         if (step) {
             const highlighted = step.highlightedNodes ?? []
             const idx = highlighted.indexOf(node.label)  // label comparison
@@ -35,17 +43,21 @@ function getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, curren
     return { fill: "rgb(31,75,104)", stroke: "rgb(21,55,80)", text: "#ffffff" }
 }
 
-function getEdgeColor(edge, gnodes, dijkstraResult, currentStepIndex) {
-    if (!dijkstraResult) return "#8A7F6E"
-    const step = dijkstraResult.steps[currentStepIndex]
+function getEdgeColor(edge, gnodes, dijkstraResult, dfsResult, currentStepIndex) {
+    const curResult = dijkstraResult || dfsResult
+    if (!curResult) return "#8A7F6E"
+    const step = curResult.steps[currentStepIndex]
     if (!step) return "#8A7F6E"
+
     const highlighted = step.highlightedEdges ?? []
     const fromNode = gnodes.find(n => n.id === edge.from)
     const toNode = gnodes.find(n => n.id === edge.to)
+
     if (!fromNode || !toNode) return "#8A7F6E"
     const isHighlighted = highlighted.some(([f, t]) =>
         f === fromNode.label && t === toNode.label
     )
+
     return isHighlighted ? "#185FA5" : "#8A7F6E"
 }
 
@@ -80,7 +92,8 @@ const MODE_HINTS = {
     addNode: "Click canvas to place a node. Drag existing nodes to reposition.",
     addEdge: "Click a source node, then a destination to create an edge.",
     delete: "Click an existing edge or node to delete it.",
-    run: "Click a source node to run Dijkstra's Shortest Path algorithm."
+    dijkstra: "Click a source node to run Dijkstra's Shortest Path algorithm.",
+    dfs: "Click a source node to run depth-first search traversal"
 }
 
 
@@ -94,6 +107,10 @@ function GraphBuilder({ onGraphReady }) {
 
     const [dijkstraSource, setDijkstraSource] = useState(null)
     const [dijkstraResult, setDijkstraResult] = useState(null)
+
+    const [dfsSource, setDfsSource] = useState(null)
+    const [dfsResult, setDfsResult] = useState(null)
+
     const [currentStepIndex, setCurrentStepIndex] = useState(0)
 
     //const [isPlaying, setIsPlaying] = useState(false)
@@ -172,8 +189,13 @@ function GraphBuilder({ onGraphReady }) {
         }
 
         // not in add edge mode, not in delete mode, check if we're running
-        if (graphMode === "run") {
+        if (graphMode === "dijkstra") {
             runDijkstra(node.id)
+            return
+        }
+
+        if (graphMode === "dfs") {
+            runDFS(node.id)
             return
         }
     }
@@ -284,27 +306,62 @@ function GraphBuilder({ onGraphReady }) {
         }
     }
 
+    async function runDFS(sourceId) {
+        if (gnodes.length < 1) {
+            setError("Please  add at least 1 node to run DFS")
+        }
+
+        setDfsResult(null)
+        setDfsSource(sourceId)
+        setCurrentStepIndex(0)
+
+        // adjacency list for backend
+        const sourceLabel = gnodes.find(n => n.id === sourceId).label
+        const edgeList = gedges.map(e => {
+            const from = gnodes.find(n => n.id === e.from).label
+            const to = gnodes.find(n => n.id === e.to).label
+            return `${from},${to},${e.weight}`
+        }).join(";")
+
+        const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080"
+
+        try {
+            const response = await fetch(`${BASE_URL}/graph/dfs?edges=${encodeURIComponent(edgeList)}&source=${sourceLabel}`)
+            if (!response.ok) {
+                throw new Error("Backend err")
+            }
+            const steps = await response.json()
+            setDfsResult(steps)
+            setCurrentStepIndex(0)
+            setError("")
+        } catch (err) {
+            await loadDfsDemo()
+            setError("Backend unavailable - showing demo graph")
+        }
+    }
+
     function switchMode(m) {
         setGraphMode(m)
         setSelectedNode(null)
         setPendingEdge(null)
         setDijkstraResult(null)
         setDijkstraSource(null)
+        setDfsResult(null)
+        setDfsSource(null)
         setError("")
     }
 
     function clearCanvas() {
         setGnodes([])
         setGedges([])
-        setSelectedNode(null)
-        setPendingEdge(null)
-        setDijkstraResult(null)
-        setDijkstraSource(null)
-        setError("")
+        switchMode("addNode") // do all the standard resetting above
         nextID.current = 0
     }
 
-    const totalSteps = dijkstraResult?.steps?.length ?? 0
+    const totalSteps = graphMode === "dijkstra"
+        ? dijkstraResult?.steps?.length ?? 0
+        : dfsResult?.steps?.length ?? 0
+
 
     async function loadDijkstraDemo() {
         const { demoData } = await import("./demo/demoData")
@@ -337,7 +394,41 @@ function GraphBuilder({ onGraphReady }) {
         setDijkstraSource(demoNodes[0].id)  // source = first node (A)
         setCurrentStepIndex(0)
         setError("")
-        setGraphMode("run")
+        setGraphMode("dijkstra")
+    }
+
+    async function loadDfsDemo() { // UPDATE WITH DIFFERENT DEMO DATA.
+        const { demoData } = await import("./demo/demoData")
+        const demo = demoData["dfs"]
+        if (!demo) return
+
+        const demoResponse = demo.response
+        const n = demoResponse.nodes.length
+        const cx = CANVAS_WIDTH / 2
+        const cy = CANVAS_HEIGHT / 2
+        const radius = 150
+
+        const demoNodes = demoResponse.nodes.map((node, i) => ({
+            id: i,
+            label: node.nodeLabel,
+            x: cx + radius * Math.cos((2 * Math.PI * i) / n),
+            y: cy + radius * Math.sin((2 * Math.PI * i) / n)
+        }))
+
+        const demoEdges = demoResponse.edges.map((e, i) => ({
+            id: i + 100,
+            from: e.fromNode,
+            to: e.toNode,
+            weight: e.weight
+        }))
+
+        setGnodes(demoNodes)
+        setGedges(demoEdges)
+        setDfsResult(demoResponse)
+        setDfsSource(demoNodes[0].id)
+        setCurrentStepIndex(0)
+        setError("")
+        setGraphMode("dfs")
     }
 
     return (
@@ -345,7 +436,7 @@ function GraphBuilder({ onGraphReady }) {
             {/* mode menu */}
             <div className="graph-toolbar">
                 <div className="algorithm-picker">
-                    {["addNode", "addEdge", "delete", "run"].map(m => (
+                    {["addNode", "addEdge", "delete", "dijkstra", "dfs"].map(m => (
                         <button
                             key={m}
                             className={graphMode === m ? "active" : ""}
@@ -354,14 +445,16 @@ function GraphBuilder({ onGraphReady }) {
                             {m === "addNode" ? "Add Node"
                                 : m === "addEdge" ? "Add Edge"
                                     : m === "delete" ? "Delete"
-                                        : "Run Dijkstra's"}
+                                        : m === "dijkstra" ? "Run Dijkstra's"
+                                            : "Run DFS"}
                         </button>
                     ))}
                 </div>
             </div>
             <div className="graph-toolbar">
                 <button className="graph-clear" onClick={clearCanvas}>Clear</button>
-                <button className="dijkstra-demo" onClick={loadDijkstraDemo}>Load Dijkstra's demo</button>
+                <button className="graph-demo" onClick={loadDijkstraDemo}>Load Dijkstra's demo</button>
+                <button className="graph-demo" onClick={loadDfsDemo}>Load DFS demo</button>
             </div>
             {/* hints */}
             <p className="graph-hint">Hint: {MODE_HINTS[graphMode]}</p>
@@ -442,7 +535,7 @@ function GraphBuilder({ onGraphReady }) {
                             x: (from.x + to.x) / 2 + px * offset,
                             y: (from.y + to.y) / 2 + py * offset
                         }
-                    const color = getEdgeColor(edge, gnodes, dijkstraResult, currentStepIndex)
+                    const color = getEdgeColor(edge, gnodes, dijkstraResult, dfsResult, currentStepIndex)
                     const markerId = color === "#185FA5" ? "graphbuild-arrow-blue" : "graphbuild-arrow"
                     return (
                         <g key={edge.id} onClick={e => handleEdgeClick(e, edge)}
@@ -483,7 +576,7 @@ function GraphBuilder({ onGraphReady }) {
 
                 {/* nodes */}
                 {gnodes.map(node => {
-                    const { fill, stroke, text } = getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, currentStepIndex)
+                    const { fill, stroke, text } = getNodeColor(node, selectedNode, dijkstraSource, dijkstraResult, dfsSource, dfsResult, currentStepIndex)
                     return (
                         <g
                             key={node.id}
@@ -508,7 +601,7 @@ function GraphBuilder({ onGraphReady }) {
                                 {node.label}
                             </text>
 
-                            {/* current shortest computed distances */}
+                            {/* current shortest computed distances. note, only render on dijkstraResult */}
                             {dijkstraResult && (() => { // IIFE = immediately invoked function expression
                                 const step = dijkstraResult.steps[currentStepIndex]
                                 if (!step) return null
@@ -578,8 +671,8 @@ function GraphBuilder({ onGraphReady }) {
                 />
             )}
 
-            {/* dijkstra's step controls */}
-            {dijkstraResult && (
+            {/* algorithm step controls */}
+            {(dijkstraResult || dfsResult) && (
                 <GraphStepControls
                     currentStepIndex={currentStepIndex}
                     totalSteps={totalSteps}
