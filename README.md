@@ -87,4 +87,7 @@ The flow of data is strict: raw information flows down as properties, events go 
 
 1. Version indicator
 2. Export link
-3. DFS + BFS
+3. BFS
+4. Improve DFS colouring, add a legend
+5. Add Dijkstra's legend
+6. "Pseudocode window"
